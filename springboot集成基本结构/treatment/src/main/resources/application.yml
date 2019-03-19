@@ -1,0 +1,73 @@
+#服务器端口，上下文环境配置server
+server:
+    port: 8080
+    servlet:
+      context-path: /treatment
+
+
+
+
+
+#集成themeleaf,即生成类似jsp文件
+
+
+#配置mybatis扫描路径
+mybatis:
+  type-aliases-package: com.kb.treatment
+  config-location: classpath:mybatis-config.xml
+  mapper-locations: classpath:com/kb/treatment/mapper/*.xml
+
+
+#配置druid数据库连接池
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://120.76.159.213:3306/mz_demo?useUnicode=true&characterEncoding=UTF-8
+    username: root
+    password: 123.com
+    type: com.alibaba.druid.pool.DruidDataSource
+    # 下面为连接池的补充设置，应用到上面所有数据源中
+    # 初始化大小，最小，最大
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    # 配置获取连接等待超时的时间
+    maxWait: 60000
+    # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+    timeBetweenEvictionRunsMillis: 60000
+    # 配置一个连接在池中最小生存的时间，单位是毫秒
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    # 打开PSCache，并且指定每个连接上PSCache的大小
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+    filters: stat,wall,log4j
+    # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+    # 合并多个DruidDataSource的监控数据
+    useGlobalDataSourceStat: true
+    ###############以上为配置druid添加的配置########################################
+
+
+  #404异常配置
+  #出现错误时, 直接抛出异常(便于异常统一处理，否则捕获不到404)
+  mvc:
+    throw-exception-if-no-handler-found: false
+
+  #不要为我们工程中的资源文件建立映射
+  resources:
+    add-mappings: false
+
+
+
+  redis:
+    host: 39.108.15.104
+    password: kb_meng
+    port: 6379
+
+
+

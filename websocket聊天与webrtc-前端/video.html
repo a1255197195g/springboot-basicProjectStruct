@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>GetUserMedia实例</title>
+    <style>
+        video {
+            width: 500px;
+            height: 500px;
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+<video id="video" autoplay></video>
+</body>
+
+
+<script type="text/javascript">
+    var getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+
+    getUserMedia.call(navigator, {
+        video: true,
+        audio: true
+    }, function(localMediaStream) {
+
+        var video = document.getElementById('video');
+
+        if (window.navigator.userAgent.indexOf("Chrome") >= 1 || window.navigator.userAgent.indexOf("Safari") >= 1) {
+
+            video.srcObject = localMediaStream;
+        }
+        else {
+            video.src = window.URL.createObjectURL(localMediaStream);
+        }
+        video.onloadedmetadata = function(e) {
+            console.log("Label: " + localMediaStream.label);
+            console.log("AudioTracks" , localMediaStream.getAudioTracks());
+            console.log("VideoTracks" , localMediaStream.getVideoTracks());
+        };
+    }, function(e) {
+        console.log('Reeeejected!', e);
+    });
+
+
+
+
+
+</script>
+
+
+</html>

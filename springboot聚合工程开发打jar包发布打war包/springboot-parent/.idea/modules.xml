@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/spring-mapper/spring-mapper.iml" filepath="$PROJECT_DIR$/spring-mapper/spring-mapper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/springboot-controller/springboot-controller.iml" filepath="$PROJECT_DIR$/springboot-controller/springboot-controller.iml" />
+      <module fileurl="file://$PROJECT_DIR$/springboot-entity/springboot-entity.iml" filepath="$PROJECT_DIR$/springboot-entity/springboot-entity.iml" />
+      <module fileurl="file://$PROJECT_DIR$/springboot-parent.iml" filepath="$PROJECT_DIR$/springboot-parent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/springboot-service/springboot-service.iml" filepath="$PROJECT_DIR$/springboot-service/springboot-service.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <style>
+        .websocket {
+            float: left;
+            width: 700px;
+            height: 640px;
+            border: 1px solid #ddd;
+        }
+
+        .content-field {
+            width: 100%;
+            height: 450px;
+
+        }
+        .input-field {
+            width: 100%;
+            height: 150px;
+            position: relative;
+            border-top: 1px solid #ddd;
+        }
+
+        .input-field textarea {
+            height: 110px;
+            width: 100%;
+            border:none;
+            outline: none;
+            box-sizing: border-box;
+            resize:none;
+            padding: 10px;
+        }
+
+        .input-field .send {
+            position: absolute;
+            right: 20px;
+            width: 80px;
+            height: 40px;
+            line-height: 40px;
+            bottom: 0;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .input-field .send:hover {
+            color: #ff6600;
+        }
+
+        .input-field .cancel {
+            position: absolute;
+            line-height: 40px;
+            right: 90px;
+            width: 80px;
+            height: 40px;
+            bottom: 0;
+            cursor: pointer;
+        }
+
+        .input-field .cancel:hover {
+            color: #ff6600;
+        }
+
+        .menu {
+            float: left;
+            width: 300px;
+            height: 640px;
+            border: 1px solid #ddd;
+            border-left: none;
+        }
+
+        .menu .info-field {
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .menu .info-field .img {
+            width: 60px;
+            height: 60px;
+            border-radius: 40px;
+
+        }
+
+        .menu .info-field .name {
+            padding-left: 10px;
+            font-size:18px;
+            color: #000;
+        }
+
+
+        li {
+            list-style: none;
+            cursor: pointer;
+        }
+
+        li:hover {
+            background-color: #f0f0f0;
+        }
+
+        .group ul, .friend ul {
+            padding:  10px 0;
+        }
+
+        .group p, .friend p {
+            background-color: #f0f0f0;
+            padding:  8px 0px 8px 10px;
+            fon-size:18px;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .group li, .friend li {
+
+            padding: 5px 0px 5px 12px;
+        }
+
+        * {
+            padding: 0;
+            margin: 0px;
+        }
+
+        .target {
+            height: 40px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+            line-height: 40px;
+            box-sizing: border-box;
+            font-size:18px;
+            color: #000000;
+            background-color: #f0f0f0;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div style="width: 1005px;margin: 0 auto">
+        <div   style="font-size:20px;width: 1005px;text-align: center;height: 60px;line-height: 60px;">websocket测试页面</div>
+        <div class="websocket">
+            <div class="target">{{curTarget.name}}</div>
+            <div class="content-field">
+                <ul>
+                    <li v-for="(item, index) in acceptContent" :v-key="index">
+                        {{ item.targetName }}: {{item.content}}
+                    </li>
+                </ul>
+            </div>
+            <div class="input-field">
+                <div class="cancel">取消</div>
+                <a class="send" @click="send">发送</a>
+                <div>
+                    <textarea v-model="sendContent"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="menu">
+            <div class="info-field">
+                <img class="img" src="https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=3126854174,2746990258&fm=27&gp=0.jpg"/>
+                <p class="name">{{name}}</p>
+            </div>
+            <div class="group">
+                <p>群组 ></p>
+                <ul>
+                    <li v-for="(item,index) in groupList" :v-key="index" @click="selectGroup(index)">
+                        {{item.name}}
+                    </li>
+                </ul>
+            </div>
+            <div class="friend">
+                <p>好友 ></p>
+                <ul>
+                    <li v-for="(item,index) in friendList" :v-key="index" @click="selectFriend(index)">
+                        {{item.name}}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    new Vue({
+        el:'#app',
+        data: {
+            sendContent: '',
+            webSocket : null,
+            userId:10002,
+            name:'谭琳',
+            //表示当前与谁在聊天
+            curTarget: {
+                name: '',
+                msgType: this.msgType, //单发还是群发
+                groupId: 0,   //如果是群发，群ID
+                groupFriendIds: '',//群里好友IDS
+                friendId:0
+            },
+            groupList:
+                [  {
+                    "id": 1001,
+                    "name": "java开发与外包群",
+                    "ids" : '10002,10003,10004,10005',
+                    "idsList": [ {
+                        "name": "谭琳",
+                        "id": "10002"
+                    },
+                        {
+                            "name": "卓彦",
+                            "id": "10003"
+                        },
+                        {
+                            "name": "陈丽萍",
+                            "id": "10004"
+                        },
+                        {
+                            "name": "黄涛",
+                            "id": "10005"
+                        }]
+                },
+                    {
+                        "id": 1002,
+                        "name": "公司内部开发群",
+                        "ids": '10002,10003',
+                        "idsList": [{
+                            "name": "谭琳",
+                            "id": "10002"
+                        },
+                            {
+                                "name": "卓彦",
+                                "id": "10003"
+                            }
+                        ]
+                    },
+                    {
+                        "id": 1003,
+                        "name": "公司内部开发群1",
+                        "ids" : '10002,10004,10005,10006',
+                        "idsList": [
+                            {
+                                "name": "谭琳",
+                                "id": "10002"
+                            },
+                            {
+                                "name": "陈丽萍",
+                                "id": "10004"
+                            },
+                            {
+                                "name": "黄涛",
+                                "id": "10005"
+                            },
+                            {
+                                "name": "孟泽",
+                                "id": "10006"
+                            }
+                        ]
+                    }
+
+                ],
+            friendList: [
+                {
+                    "name": "谭琳",
+                    "id": "10002"
+                },
+                {
+                    "name": "卓彦",
+                    "id": "10003"
+                },
+                {
+                    "name": "陈丽萍",
+                    "id": "10004"
+                },
+                {
+                    "name": "黄涛",
+                    "id": "10005"
+                },
+                {
+                    "name": "孟泽",
+                    "id": "10006"
+                }
+            ],
+            //当前展示的消息
+            acceptContent: [
+            ],
+            //当前接受到的所有消息
+            totalAcceptContent:[
+
+            ],
+            acceptMsg: {
+                msgType: 0, //2单发，1群发，0所有人
+                groupId:0, //如果是群发，那么确定是哪个群发过来的
+                groupFriendIds: null,
+                targetId: 0, //确定是哪个人发过来的
+                targetName:'',//发送人的姓名
+                friendId:0, //自己
+                content:'' //发过来的消息
+            },
+            sendMsg : {
+                msgType: 0,//2单发，1群发，0所有人
+                groupId: 0, //发往哪个群
+                groupFriendIds:null,
+                targetId: 0, //自己
+                friendId:0, //如果不是群发，那么指定发给谁
+                content: ''//发送的消息
+            }
+        },
+
+        mounted: function(){
+
+            if ( 'WebSocket' in window ){
+                this.webSocket = new WebSocket("ws://localhost:8888/websocket/10002")
+                this.selectGroup(0);
+            }else {
+                alert("当前浏览器不支持websocket");
+            }
+
+            //连接成功时的回调
+            this.webSocket.onopen = function () {
+
+                alert("连接成功");
+            }
+
+            //接到消息
+            let that = this;
+            this.webSocket.onmessage = function(event){
+
+                //接受消息
+                that.accept(event.data);
+            }
+
+
+            //监听窗口关闭事件，当前窗口关闭时，主动去关闭websocket
+            window.onbeforeunload = function(){
+                this.closeWebsocket();
+            }
+
+            //连接关闭的回调
+            this.webSocket.onclose = function () {
+                alert("连接关闭");
+            }
+            //连接错误
+            this.webSocket.onerror = function () {
+                alert("连接错误");
+            }
+        },
+
+        methods: {
+
+            //选择和某个群料亭啊
+            selectGroup(index){
+
+                var group = this.groupList[index];
+                if ( group.id == this.curTarget.groupId ){
+                    //原Item上点击，不做处理
+                    return;
+                }else {
+                    //清空当前输入页面的消息
+                    this.curTarget = {
+                        msgType: 1,
+                        name: group.name,
+                        groupId: group.id,
+                        groupFriendIds:group.ids,
+                        friendId: -1,
+                    }
+
+                    let that = this;
+                    this.acceptContent = this.totalAcceptContent.filter( item=>{
+                        return item.groupId == this.curTarget.groupId;
+                    })
+                    this.sendContent = '';
+                }
+
+
+            },
+
+            //选择和某个朋友聊天
+            selectFriend(index){
+
+                var friend = this.friendList[index];
+                if ( this.curTarget.friendId == friend.id ){
+                    return;
+                }else  {
+
+                    this.curTarget = {
+                        msgType: 2,
+                        name: friend.name,
+                        groupId: -1,
+                        groupFriendIds:"",
+                        friendId: friend.id
+                    }
+                    //清空当前输入页面的消息
+                    let that = this;
+                    this.acceptContent = this.totalAcceptContent.filter( item=>{
+                        return item.friendId == this.curTarget.friendId;
+                    } );
+                    this.sendContent = '';
+                }
+                return item.friendId == this.curTarget.friendId;
+            },
+
+            //根据群ID。以及群友ID，查找好友的姓名， msgType必须为1
+            findGroupFriendName:function( groupId, friendId ){
+
+                //先找群
+                for( let index in this.groupList ){
+                    var group = this.groupList[index];
+                    if ( group.id == groupId ){
+                        //然后找好友ID
+                        return this.findFriendName(friendId, group.idsList)
+                    }
+                }
+            },
+
+            //根据好友ID，找出好友的姓名， msgType必须为2
+            findFriendName: function( friendId,friendList ){
+
+                for( var index in friendList ){
+                    var friend = friendList[index];
+                    if( friend.id == friendId ){
+                        return friend.name;
+                    }
+                }
+            },
+
+
+            //主动发送消息
+            send: function () {
+
+                //如果是发送群消息，判断自己在不在该群。
+                if( this.curTarget.msgType == 1 ){
+
+
+                    var tempList = this.groupList.filter( item=>{
+
+                        return item.id==this.curTarget.groupId  &&  (item.ids.indexOf(""+this.userId) >-1);
+
+                    })
+
+                    if ( tempList.length  <=0 ){
+                        alert("异常，你不在该群中。");
+                        return;
+                    }
+                }
+                //如果是发送好友消息，判断自己是不是有对方好友。
+                else {
+
+                    var tempList = this.friendList.filter( item=>{
+                        return item.id == this.curTarget.friendId;
+                    })
+                    if ( tempList.length<= 0 ){
+                        alert("消息接收者不在你的好友列表中。");
+                        return;
+                    }
+                }
+
+                var  msg = {
+                    msgType: this.curTarget.msgType,//2单发，1群发，0所有人
+                    groupId: this.curTarget.groupId, //发往哪个群
+                    groupFriendIds:this.curTarget.groupFriendIds,
+                    targetId: this.userId, //自己
+                    friendId:this.curTarget.friendId, //如果不是群发，那么指定发给谁
+                    content: this.sendContent//发送的消息
+                }
+                this.webSocket.send(JSON.stringify(msg));
+                this.sendContent = '';
+            },
+
+            //接受到消息
+            accept:function( data ){
+
+                if (data != null && data != undefined ) {
+
+                    var acceptMsg = JSON.parse(data);
+                    //找出发送者的姓名
+                    if ( acceptMsg.msgType == 1 ){
+                        acceptMsg.targetName = this.findGroupFriendName(acceptMsg.groupId, acceptMsg.targetId);
+                        // alert("name: "+name);
+                    } else if( acceptMsg.msgType == 2 ){
+                        acceptMsg.targetName = this.findFriendName(acceptMsg.targetId, this.friendList );
+                        // alert("name: "+acceptMsg.targetName);
+                    }
+                    this.totalAcceptContent.push(acceptMsg);
+                    //判断当前消息是否是当前框的，如果是当前框的，则直接展示
+                    //如果不是当前聊天对象的，那么就先不展示
+
+
+                    if ( acceptMsg.msgType == 1 ){
+
+                        if ( this.curTarget.groupId == acceptMsg.groupId ){
+                            //直接输出到当前的聊天框
+                            this.acceptContent.push(acceptMsg);
+                        }
+
+                    } else if( acceptMsg.msgType == 2 ){
+
+                        if ( this.curTarget.friendId == acceptMsg.targetId || this.userId == acceptMsg.targetId ){
+                            //直接输出到当前的聊天框
+                            this.acceptContent.push(acceptMsg);
+                        }else {
+                            //暂时不做处理
+                        }
+                    }
+
+                    // this.acceptContent.push(acceptMsg);
+                }
+            },
+
+            //主动关闭连接
+            closeWebscoket: function closeWebsocket() {
+                this.webSocket.close();
+            }
+        }
+    })
+</script>
+</body>
+</html>
